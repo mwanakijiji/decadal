@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+import ipdb
+import numpy as np
 
 '''
 Relevant survey Qs:
@@ -36,44 +38,117 @@ Relevant survey Qs:
  'Are you able to provide case summaries for applicable cases? Can we highlight these in the decadal plan?',
 '''
 
-stem = '/Users/bandari/Documents/git.repos/decadal/data/'
 
-df = pd.read_csv(stem + 'survey_data.csv')
+def numerical_hbar(df_subset_pass, title_string, abcissa_string, norm_by=1, file_name='junk.png'):
 
-df = df.drop(0)
-df_sorted = df.sort_values('For which Australian Astronomy institution/department are you reporting for?')
+    institutions = df_subset_pass.iloc[:, 0].tolist()
+    responses = df_subset_pass.iloc[:, 1].tolist()
+    # Converting responses to numeric values for plotting
+    responses = [float(response) if float(response) > 0 else float(0) for response in responses]
+    # if normalizing
+    responses = np.divide(responses, norm_by)
+    # Sorting by response size
+    institutions, responses = zip(*sorted(zip(institutions, responses), key=lambda x: x[1]))
+    # Plotting
+    plt.figure(figsize=(10, len(institutions) * 0.5))
+    plt.barh(institutions, responses, color='skyblue')
+    plt.xlabel(abcissa_string)
+    plt.title(title_string)
+    plt.tight_layout()
+    plt.savefig(file_name)
+    plt.clf()
+    print('Wrote',file_name)
 
-# Does your institution host activities connected to astronomy-related instrumentation?
-df_subset = df[['For which Australian Astronomy institution/department are you reporting for?','Does your institution host activities connected to astronomy-related instrumentation?']]
-institutions = df_subset.iloc[:, 0].tolist()
-responses = df_subset.iloc[:, 1].tolist()
-# Plotting
-plt.clf()
-plt.figure(figsize=(5, len(institutions) * 0.5))
-for idx, (institution, response) in enumerate(zip(institutions, responses)):
-    if response=='Yes':  # If the response is 'Yes'
-        plt.plot(1, idx, marker='$Y$', markersize=10, color='g', label='Hosts Instrumentation Activities' if idx == 0 else "")  # Green Y for 'Yes'
-    else:
-        plt.plot(1, idx, marker='$N$', markersize=10, color='r', label='Does Not Host Instrumentation Activities' if idx == 0 else "")  # Red x for 'No' (or nan)
-plt.yticks(range(len(institutions)), institutions)
-plt.xticks([])  # Hide x-axis ticks
-plt.title('Institutional Participation\nin Astronomy-Related\nInstrumentation Activities')
-#plt.legend()
-plt.tight_layout()
-plt.savefig('junk1.png')
+    return
 
-# What is the approximate expenditure of your institution in this area over the years 2019-2023?
-df_subset = df[['For which Australian Astronomy institution/department are you reporting for?','What is the approximate expenditure of your institution in this area over the years 2019-2023?']]
-institutions = df_subset.iloc[:, 0].tolist()
-responses = df_subset.iloc[:, 1].tolist()
-# Plotting
-plt.figure(figsize=(7, len(institutions) * 0.5))
-for idx, (institution, response) in enumerate(zip(institutions, responses)):
-    plt.text(0.1, idx-0.1, response, fontsize=12, color='k')
-plt.yticks(range(len(institutions)), institutions)
-plt.xticks([])  # Hide x-axis ticks
-plt.ylim([-0.5, len(institutions)])
-plt.title('Institutional Participation\nin Astronomy-Related\nInstrumentation Activities')
-#plt.legend()
-plt.tight_layout()
-plt.savefig('junk2.png')
+
+def yes_no_string(df_subset_pass, title_string, file_name='junk.png'):
+
+    institutions = df_subset_pass.iloc[:, 0].tolist()
+    responses = df_subset_pass.iloc[:, 1].tolist()
+    # Plotting
+    plt.clf()
+    plt.figure(figsize=(5, len(institutions) * 0.5))
+    for idx, (institution, response) in enumerate(zip(institutions, responses)):
+        if response=='Yes':  # If the response is 'Yes'
+            plt.plot(1, idx, marker='$Y$', markersize=10, color='g')  # Green Y for 'Yes'
+        else:
+            plt.plot(1, idx, marker='$N$', markersize=10, color='r')  # Red x for 'No' (or nan)
+    plt.yticks(range(len(institutions)), institutions)
+    plt.xticks([])  # Hide x-axis ticks
+    plt.title(title_string)
+    plt.tight_layout()
+    plt.savefig(file_name)
+    plt.clf()
+    print('Wrote',file_name)
+
+    return
+
+
+def general_string(df_subset_pass, title_string, file_name='junk.png'):
+
+    institutions = df_subset_pass.iloc[:, 0].tolist()
+    responses = df_subset_pass.iloc[:, 1].tolist()
+    # Plotting
+    plt.clf()
+    plt.figure(figsize=(5, len(institutions) * 0.5))
+    for idx, (institution, response) in enumerate(zip(institutions, responses)):
+        plt.text(0.1, idx-0.1, response, fontsize=12, color='k')
+    plt.yticks(range(len(institutions)), institutions)
+    plt.xticks([])  # Hide x-axis ticks
+    plt.ylim([-0.5, len(institutions)])
+    plt.title(title_string)
+    plt.tight_layout()
+    plt.savefig(file_name)
+    plt.clf()
+    print('Wrote',file_name)
+
+    return
+
+
+def main():
+
+    stem = '/Users/bandari/Documents/git.repos/decadal/data/'
+
+    df = pd.read_csv(stem + 'survey_data_cleaned.csv')
+
+    df = df.drop(0)
+    df_sorted = df.sort_values('For which Australian Astronomy institution/department are you reporting for?')
+
+    # Does your institution host activities connected to astronomy-related instrumentation?
+    df_subset = df[['For which Australian Astronomy institution/department are you reporting for?', 'Does your institution host activities connected to astronomy-related instrumentation?']]
+    _ = yes_no_string(df_subset_pass=df_subset, 
+                    title_string='Does your institution host activities connected to astronomy-related instrumentation?', 
+                    file_name='junk0.png')
+
+    # What is the approximate expenditure of your institution in this area over the years 2019-2023? (string)
+    df_subset = df[['For which Australian Astronomy institution/department are you reporting for?','What is the approximate expenditure of your institution in this area over the years 2019-2023?']]
+    _ = general_string(df_subset_pass=df_subset, 
+                    title_string='What is the approximate expenditure of your institution in this area over the years 2019-2023?', 
+                    file_name='junk1a.png')
+    _ = numerical_hbar(df_subset_pass=df_subset, title_string = 'What is the approximate expenditure of your institution in this area over the years 2019-2023?', 
+                    abcissa_string = '$M AUD', 
+                    norm_by = 1e6,
+                    file_name='junk1b.png')
+
+    # In your institution, what is the approximate distribution of instrumentation-focused personnel effort (FTE) given to (in percent)
+    df_subset = df[['For which Australian Astronomy institution/department are you reporting for?', 'How many full-time equivalence (FTE) employees work in Astronomy (including support staff) at your institution? (Please adjust for part-time work.)Include staff with unknown or non-binary gender in the total number. Detailed gender demographics will be collected by the individual survey']]
+    _ = numerical_hbar(df_subset_pass=df_subset, title_string = 'How many full-time equivalence (FTE) employees work in Astronomy (including support staff) at your institution?', 
+                    abcissa_string = 'Percent', 
+                    norm_by = 1,
+                    file_name='junk3.png')
+
+    # What would the ideal distribution of resources (funding and FTE) across the following areas look like for your institution (in percent)?
+    df_subset = df[['For which Australian Astronomy institution/department are you reporting for?', 'What would the ideal distribution of resources (funding and FTE) across the following areas look like for your institution (in percent)?']]
+    _ = numerical_hbar(df_subset_pass=df_subset, title_string = 'What would the ideal distribution of resources (funding and FTE) across the following areas look like for your institution (in percent)?', 
+                    abcissa_string = 'Percent', 
+                    file_name='junk4.png')
+
+    # 'Do you believe that overall funding received by your institute for astronomy instrumentation is
+    df_subset = df[['For which Australian Astronomy institution/department are you reporting for?', 'Do you believe that overall funding received by your institute for astronomy instrumentation is:']]
+    _ = general_string(df_subset_pass=df_subset, 
+                    title_string='Do you believe that overall funding received by your institute for astronomy instrumentation is', 
+                    file_name='junk5.png')
+
+if __name__ == "__main__":
+    main()
